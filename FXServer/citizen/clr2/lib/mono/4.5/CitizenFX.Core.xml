@@ -27,6 +27,137 @@
             <param name="eventName">The name of the event.</param>
             <param name="args">Arguments to pass to the event.</param>
         </member>
+        <member name="T:CitizenFX.Core.FastStructure">
+            <summary>
+            Provides fast reading and writing of generic structures to a memory location using IL emitted functions.
+            </summary>
+        </member>
+        <member name="M:CitizenFX.Core.FastStructure.GetPtr``1(``0@)">
+            <summary>
+            Retrieve a pointer to the passed generic structure type. This is achieved by emitting a <see cref="T:System.Reflection.Emit.DynamicMethod"/> to retrieve a pointer to the structure.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="structure"></param>
+            <returns>A pointer to the provided structure in memory.</returns>
+            <see cref="F:CitizenFX.Core.FastStructure`1.GetPtr"/>
+        </member>
+        <member name="M:CitizenFX.Core.FastStructure.PtrToStructure``1(System.IntPtr)">
+            <summary>
+            Loads the generic value type <typeparamref name="T"/> from a pointer. This is achieved by emitting a <see cref="T:System.Reflection.Emit.DynamicMethod"/> that returns the value in the memory location as a <typeparamref name="T"/>.
+            <para>The equivalent non-generic C# code:</para>
+            <code>
+            unsafe MyStruct ReadFromPointer(byte* pointer)
+            {
+                return *(MyStruct*)pointer;
+            }
+            </code>
+            </summary>
+            <typeparam name="T">Any value/structure type</typeparam>
+            <param name="pointer">Unsafe pointer to memory to load the value from</param>
+            <returns>The newly loaded value</returns>
+        </member>
+        <member name="M:CitizenFX.Core.FastStructure.StructureToPtr``1(``0@,System.IntPtr)">
+            <summary>
+            Writes the generic value type <typeparamref name="T"/> to the location specified by a pointer. This is achieved by emitting a <see cref="T:System.Reflection.Emit.DynamicMethod"/> that copies the value from the referenced structure into the specified memory location.
+            <para>There is no exact equivalent possible in C#, the closest possible (generates the same IL) is the following code:</para>
+            <code>
+            unsafe void WriteToPointer(ref SharedHeader dest, ref SharedHeader src)
+            {
+                dest = src;
+            }
+            </code>
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="pointer"></param>
+            <param name="structure"></param>
+        </member>
+        <member name="M:CitizenFX.Core.FastStructure.SizeOf``1">
+            <summary>
+            Retrieve the cached size of a structure
+            </summary>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+            <remarks>Caches the size by type</remarks>
+            <see cref="F:CitizenFX.Core.FastStructure`1.Size"/>
+        </member>
+        <member name="M:CitizenFX.Core.FastStructure.ReadArray``1(``0[],System.IntPtr,System.Int32,System.Int32)">
+            <summary>
+            Reads a number of elements from a memory location into the provided buffer starting at the specified index.
+            </summary>
+            <typeparam name="T">The structure type</typeparam>
+            <param name="buffer">The destination buffer.</param>
+            <param name="source">The source memory location.</param>
+            <param name="index">The start index within <paramref name="buffer"/>.</param>
+            <param name="count">The number of elements to read.</param>
+        </member>
+        <member name="M:CitizenFX.Core.FastStructure.WriteArray``1(System.IntPtr,``0[],System.Int32,System.Int32)">
+            <summary>
+            Writes a number of elements to a memory location from the provided buffer starting at the specified index.
+            </summary>
+            <typeparam name="T">The structure type</typeparam>
+            <param name="destination">The destination memory location.</param>
+            <param name="buffer">The source buffer.</param>
+            <param name="index">The start index within <paramref name="buffer"/>.</param>
+            <param name="count">The number of elements to write.</param>
+        </member>
+        <member name="T:CitizenFX.Core.FastStructure`1">
+            <summary>
+            Emits optimized IL for the reading and writing of structures to/from memory.
+            <para>For a 32-byte structure with 1 million iterations:</para>
+            <para>The <see cref="F:CitizenFX.Core.FastStructure`1.PtrToStructure"/> method performs approx. 20x faster than
+            <see cref="M:System.Runtime.InteropServices.Marshal.PtrToStructure(System.IntPtr,System.Type)"/> (8ms vs 160ms), and about 1.6x slower than the non-generic equivalent (8ms vs 5ms)</para>
+            <para>The <see cref="F:CitizenFX.Core.FastStructure`1.StructureToPtr"/> method performs approx. 8x faster than 
+            <see cref="M:System.Runtime.InteropServices.Marshal.StructureToPtr(System.Object,System.IntPtr,System.Boolean)"/> (4ms vs 34ms). </para>
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="T:CitizenFX.Core.FastStructure`1.GetPtrDelegate">
+            <summary>
+            Delegate that returns a pointer to the provided structure. Use with extreme caution.
+            </summary>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="T:CitizenFX.Core.FastStructure`1.PtrToStructureDelegate">
+            <summary>
+            Delegate for loading a structure from the specified memory address
+            </summary>
+            <param name="pointer"></param>
+            <returns></returns>
+        </member>
+        <member name="T:CitizenFX.Core.FastStructure`1.StructureToPtrDelegate">
+            <summary>
+            Delegate for writing a structure to the specified memory address
+            </summary>
+            <param name="value"></param>
+            <param name="pointer"></param>
+        </member>
+        <member name="F:CitizenFX.Core.FastStructure`1.GetPtr">
+            <summary>
+            The <see cref="T:CitizenFX.Core.FastStructure`1.GetPtrDelegate"/> delegate for the generated IL to retrieve a pointer to the structure
+            </summary>
+        </member>
+        <member name="F:CitizenFX.Core.FastStructure`1.PtrToStructure">
+            <summary>
+            The <see cref="T:CitizenFX.Core.FastStructure`1.PtrToStructureDelegate"/> delegate for the generated IL to retrieve a structure from a specified memory address.
+            </summary>
+        </member>
+        <member name="F:CitizenFX.Core.FastStructure`1.StructureToPtr">
+            <summary>
+            The <see cref="T:CitizenFX.Core.FastStructure`1.StructureToPtrDelegate"/> delegate for the generated IL to store a structure at the specified memory address.
+            </summary>
+        </member>
+        <member name="F:CitizenFX.Core.FastStructure`1.Size">
+            <summary>
+            Cached size of T as determined by <see cref="M:System.Runtime.InteropServices.Marshal.SizeOf(System.Type)"/>.
+            </summary>
+        </member>
+        <member name="M:CitizenFX.Core.FastStructure`1.#cctor">
+            <summary>
+            Performs once of type compatibility check.
+            </summary>
+            <exception cref="T:System.ArgumentException">Thrown if the type T is incompatible</exception>
+        </member>
         <member name="F:CitizenFX.Core.MathUtil.ZeroTolerance">
             <summary>
             The value for which all absolute numbers smaller than are considered equal to zero.
@@ -6347,6 +6478,13 @@
             thisScriptCheck - can be destroyed if it belongs to the calling script.
             </summary>
         </member>
+        <member name="F:CitizenFX.Core.Native.Hash.FREEZE_ENTITY_POSITION">
+            <summary>
+            No, this should be called SET_ENTITY_KINEMATIC. It does more than just "freeze" it's position.
+            
+            		^Rockstar Devs named it like that, Now cry about it.
+            </summary>
+        </member>
         <member name="F:CitizenFX.Core.Native.Hash.GET_CURRENT_RESOURCE_NAME">
             <summary>
             Returns the name of the currently executing resource.
@@ -6456,6 +6594,27 @@
             		Axis - Invert Axis Flags
             </summary>
         </member>
+        <member name="F:CitizenFX.Core.Native.Hash.SET_ENTITY_ROTATION">
+            <summary>
+            rotationOrder refers to the order yaw pitch roll is applied
+            		value ranges from 0 to 5. What you use for rotationOrder when setting must be the same as rotationOrder when getting the rotation. 
+            		Unsure what value corresponds to what rotation order, more testing will be needed for that.
+            		For the most part R* uses 1 or 2 as the order.
+            		p5 is usually set as true
+            
+            </summary>
+        </member>
+        <member name="F:CitizenFX.Core.Native.Hash.SET_ENTITY_ROTATION_VELOCITY">
+            <summary>
+            The reverse of GET_VEHICLE_ROTATION_VELOCITY.
+            
+            </summary>
+        </member>
+        <member name="F:CitizenFX.Core.Native.Hash.SET_ENTITY_VELOCITY">
+            <summary>
+            Note that the third parameter(denoted as z) is "up and down" with positive ment.
+            </summary>
+        </member>
         <member name="F:CitizenFX.Core.Native.Hash.SET_PED_INTO_VEHICLE">
             <summary>
             Ped: The ped to warp.
@@ -6514,6 +6673,12 @@
         <member name="M:CitizenFX.Core.Native.API.CreateVehicle(System.UInt32,System.Single,System.Single,System.Single,System.Single,System.Boolean,System.Boolean)">
             <summary>
             thisScriptCheck - can be destroyed if it belongs to the calling script.
+            </summary>
+        </member>
+        <member name="M:CitizenFX.Core.Native.API.FreezeEntityPosition(System.Int32,System.Boolean)">
+            <summary>
+            No, this should be called SET_ENTITY_KINEMATIC. It does more than just "freeze" it's position.
+            ^Rockstar Devs named it like that, Now cry about it.
             </summary>
         </member>
         <member name="M:CitizenFX.Core.Native.API.GetCurrentResourceName">
@@ -6631,6 +6796,29 @@
             p7 is always 1 in the scripts. Set to 1, an area around the destination coords for the moved entity is cleared from other entities.
             Often ends with 1, 0, 0, 1); in the scripts. It works.
             Axis - Invert Axis Flags
+            </summary>
+        </member>
+        <member name="M:CitizenFX.Core.Native.API.SetEntityRotation(System.Int32,System.Single,System.Single,System.Single,System.Int32,System.Boolean)">
+            <summary>
+            rotationOrder refers to the order yaw pitch roll is applied
+            value ranges from 0 to 5. What you use for rotationOrder when setting must be the same as rotationOrder when getting the rotation.
+            Unsure what value corresponds to what rotation order, more testing will be needed for that.
+            For the most part R* uses 1 or 2 as the order.
+            p5 is usually set as true
+            </summary>
+        </member>
+        <member name="M:CitizenFX.Core.Native.API.SetEntityRotationVelocity(System.Int32,System.Single,System.Single,System.Single)">
+            <summary>
+            The reverse of GET_VEHICLE_ROTATION_VELOCITY.
+            </summary>
+            <param name="entity">The target entity.</param>
+            <param name="x">X component of the vector.</param>
+            <param name="y">Y component of the vector.</param>
+            <param name="z">Z component of the vector.</param>
+        </member>
+        <member name="M:CitizenFX.Core.Native.API.SetEntityVelocity(System.Int32,System.Single,System.Single,System.Single)">
+            <summary>
+            Note that the third parameter(denoted as z) is "up and down" with positive ment.
             </summary>
         </member>
         <member name="M:CitizenFX.Core.Native.API.SetPedIntoVehicle(System.Int32,System.Int32,System.Int32)">
